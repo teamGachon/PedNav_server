@@ -35,3 +35,16 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Firebase Admin SDK ###
+src/main/resources/firebase/*.json
+
+### Logs ###
+*.log
+
+### OS-specific files ###
+.DS_Store
+Thumbs.db
+
+### Generated files ###
+*.class
