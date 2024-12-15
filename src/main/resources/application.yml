@@ -32,8 +32,6 @@ spring:
         exposure:
           include: health, info  # 관리 엔드포인트 설정 (health, info 활성화)
 
-  server:
-    port: 8082  # 서버 포트를 8081로 설정 (기본은 8080)
 
 jmx:
   enabled: false  # JMX 비활성화

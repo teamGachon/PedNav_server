@@ -8,15 +8,15 @@ import pednav.backend.pednav.dto.FastApiResponseDTO;
 @Service
 public class FastApiService {
 
-    private final String fastApiUrl = "http://<FASTAPI_SERVER_IP>:8000/predict"; // FastAPI 엔드포인트
+    private final String fastApiUrl = "http://172.25.82.102:8000/predict"; // FastAPI 엔드포인트
 
-    public Boolean callFastApi(String filePath) {
+    public FastApiResponseDTO callFastApi(String filePath) {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<FastApiResponseDTO> response =
                 restTemplate.postForEntity(fastApiUrl, filePath, FastApiResponseDTO.class);
 
         if (response.getBody() != null) {
-            return response.getBody().getVehicleDetected(); // 차량 감지 여부 반환
+            return response.getBody(); // vehicleDetected와 result 값을 함께 반환
         } else {
             throw new RuntimeException("FastAPI에서 결과를 반환하지 않았습니다.");
         }

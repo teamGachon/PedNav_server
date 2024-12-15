@@ -2,13 +2,17 @@ package pednav.backend.pednav.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 import pednav.backend.pednav.domain.entity.Audio;
@@ -28,12 +32,15 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final AudioService audioService;
     private final RestTemplate restTemplate = new RestTemplate(); // FastAPI 호출용 RestTemplate
 
+    boolean isVehicleDetected;
+    double resultValue;
+
     public AudioWebSocketHandler(AudioService audioService) {
         this.audioService = audioService;
     }
 
     private static final String AUDIO_FILE_DIRECTORY = "audio_storage/"; // 파일 저장 디렉토리
-    private static final String FASTAPI_URL = "http://localhost:8000/predict"; // FastAPI 엔드포인트
+    private static final String FASTAPI_URL = "http://172.25.82.102:8000/predict"; // FastAPI 엔드포인트
     private static final Logger logger = LoggerFactory.getLogger(AudioWebSocketHandler.class);
 
     @Override
@@ -74,7 +81,9 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
         }
 
         // FastAPI로 파일 경로 전송 및 결과값 받기
-        boolean isVehicleDetected = sendFileToFastAPI(filePath);
+        Map<String, Object> fastApiResponse = sendFileToFastAPI(filePath);
+        boolean isVehicleDetected = (Boolean) fastApiResponse.getOrDefault("vehicleDetected", false);
+        double result = (Double) fastApiResponse.getOrDefault("result", 0.0);
 
         Audio audio = Audio.builder()
                 .fileName(fileName)
@@ -85,14 +94,24 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                 .channels(1)
                 .duration((double) audioData.length / (44100 * 2))
                 .vehicleDetected(isVehicleDetected)
+                .result(result)
                 .expirationAt(isVehicleDetected ? null : LocalDateTime.now().plusDays(7)) // 만료 시간 설정
                 .build();
 
         Audio savedAudio = audioService.saveAudio(audio);
 
-        logger.info("[{}] 오디오 메타데이터 DB 저장 완료: ID = {}, 차량 소리 감지 여부 = {}, 파일 경로 = {}",
+        logger.info("[{}] 오디오 메타데이터 DB 저장 완료: ID = {}, 차량 소리 감지 여부 = {}, 결과 값 = {}, 파일 경로 = {}",
                 LocalDateTime.now(), savedAudio.getId(),
-                isVehicleDetected ? "감지됨" : "미감지", savedAudio.getFilePath());
+                isVehicleDetected ? "감지됨" : "미감지",
+                result, savedAudio.getFilePath());
+
+        // **결과를 JSON 형식으로 안드로이드로 전송**
+        String responseJson = String.format(
+                "{\"vehicleDetected\": %b, \"result\": %.2f}",
+                isVehicleDetected, result
+        );
+        session.sendMessage(new TextMessage(responseJson));
+        logger.info("[{}] 결과를 안드로이드로 전송: {}", LocalDateTime.now(), responseJson);
     }
 
     @Override
@@ -141,25 +160,32 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
      * @param filePath WAV 파일 경로
      * @return 차량 소리 감지 여부 (true/false)
      */
-    private boolean sendFileToFastAPI(String filePath) {
+    private Map<String, Object> sendFileToFastAPI(String filePath) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", "application/json");
+            headers.set("Content-Type", "multipart/form-data");
 
-            Map<String, String> requestBody = new HashMap<>();
-            requestBody.put("file_path", filePath);
+            // 파일 읽기
+            File file = new File(filePath);
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new FileSystemResource(file));
 
-            HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            ResponseEntity<Map> response = restTemplate.postForEntity(FASTAPI_URL, request, Map.class);
-            logger.info("[{}] FastAPI로부터 응답 수신: {}", LocalDateTime.now(), response.getBody());
+            // FastAPI 호출
+            ResponseEntity<Map> response = restTemplate.postForEntity(FASTAPI_URL, requestEntity, Map.class);
 
-            if (response.getBody() != null) {
-                return (Boolean) response.getBody().get("is_vehicle_detected");
-            }
+            logger.info("[{}] FastAPI 응답 상태 코드: {}", LocalDateTime.now(), response.getStatusCode());
+            logger.info("[{}] FastAPI 응답 헤더: {}", LocalDateTime.now(), response.getHeaders());
+            logger.info("[{}] FastAPI 응답 바디: {}", LocalDateTime.now(), response.getBody());
+
+
+            return response.getBody() != null ? response.getBody() : Map.of();
         } catch (Exception e) {
             logger.error("[{}] FastAPI 호출 실패: {}", LocalDateTime.now(), e.getMessage());
+            return Map.of(); // 실패 시 빈 맵 반환
         }
-        return false; // 실패 시 기본값
     }
 }
+
+

@@ -45,5 +45,7 @@ public class Audio {
     @Column(nullable = true)
     private LocalDateTime expirationAt; // 일반 데이터의 만료 시간
 
+    @Column(nullable = true)
+    private Double result; // 모델 결과값 (0.0 ~ 1.0)
 
 }
