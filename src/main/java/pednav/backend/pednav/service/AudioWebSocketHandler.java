@@ -2,7 +2,11 @@ package pednav.backend.pednav.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -15,17 +19,21 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final AudioService audioService;
+    private final RestTemplate restTemplate = new RestTemplate(); // FastAPI 호출용 RestTemplate
 
     public AudioWebSocketHandler(AudioService audioService) {
         this.audioService = audioService;
     }
 
     private static final String AUDIO_FILE_DIRECTORY = "audio_storage/"; // 파일 저장 디렉토리
+    private static final String FASTAPI_URL = "http://localhost:8000/predict"; // FastAPI 엔드포인트
     private static final Logger logger = LoggerFactory.getLogger(AudioWebSocketHandler.class);
 
     @Override
@@ -65,22 +73,26 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
             throw e;
         }
 
-        // 데이터베이스에 메타데이터 저장
+        // FastAPI로 파일 경로 전송 및 결과값 받기
+        boolean isVehicleDetected = sendFileToFastAPI(filePath);
+
         Audio audio = Audio.builder()
                 .fileName(fileName)
                 .filePath(filePath)
                 .uploadedAt(LocalDateTime.now())
-                .format("WAV") // WAV 포맷 설정
-                .sampleRate(44100) // 샘플링 레이트
-                .channels(1) // 모노 설정
+                .format("WAV")
+                .sampleRate(44100)
+                .channels(1)
+                .duration((double) audioData.length / (44100 * 2))
+                .vehicleDetected(isVehicleDetected)
+                .expirationAt(isVehicleDetected ? null : LocalDateTime.now().plusDays(7)) // 만료 시간 설정
                 .build();
 
-        Audio savedAudio = audioService.saveAudio(audio); // AudioService를 사용해 메타데이터 저장
+        Audio savedAudio = audioService.saveAudio(audio);
 
-        // **DB에 저장된 결과를 로그로 출력**
-        logger.info("[{}] 오디오 메타데이터 DB 저장 완료: ID = {}, 파일 이름 = {}, 파일 경로 = {}, 업로드 시간 = {}",
-                LocalDateTime.now(), savedAudio.getId(), savedAudio.getFileName(),
-                savedAudio.getFilePath(), savedAudio.getUploadedAt());
+        logger.info("[{}] 오디오 메타데이터 DB 저장 완료: ID = {}, 차량 소리 감지 여부 = {}, 파일 경로 = {}",
+                LocalDateTime.now(), savedAudio.getId(),
+                isVehicleDetected ? "감지됨" : "미감지", savedAudio.getFilePath());
     }
 
     @Override
@@ -122,5 +134,32 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
         buffer.putInt(pcmDataLength); // Subchunk2 Size
 
         outputStream.write(buffer.array());
+    }
+
+    /**
+     * FastAPI 서버로 파일 경로를 전송하고 결과값을 받아옴
+     * @param filePath WAV 파일 경로
+     * @return 차량 소리 감지 여부 (true/false)
+     */
+    private boolean sendFileToFastAPI(String filePath) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", "application/json");
+
+            Map<String, String> requestBody = new HashMap<>();
+            requestBody.put("file_path", filePath);
+
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(FASTAPI_URL, request, Map.class);
+            logger.info("[{}] FastAPI로부터 응답 수신: {}", LocalDateTime.now(), response.getBody());
+
+            if (response.getBody() != null) {
+                return (Boolean) response.getBody().get("is_vehicle_detected");
+            }
+        } catch (Exception e) {
+            logger.error("[{}] FastAPI 호출 실패: {}", LocalDateTime.now(), e.getMessage());
+        }
+        return false; // 실패 시 기본값
     }
 }

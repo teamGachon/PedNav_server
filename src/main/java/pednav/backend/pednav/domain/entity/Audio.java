@@ -38,4 +38,12 @@ public class Audio {
 
     @Column(nullable = true)
     private Double duration; // 소리 데이터의 길이(초 단위)
+
+    @Column(nullable = false)
+    private Boolean vehicleDetected; // 차량 소리 감지 여부 (true/false)
+
+    @Column(nullable = true)
+    private LocalDateTime expirationAt; // 일반 데이터의 만료 시간
+
+
 }
