@@ -65,7 +65,7 @@ public class AudioMetadataDTO {
 
     @Override
     public String toString() {
-        return "AudioMetadataDTO{" +
+         return "AudioMetadataDTO{" +
                 "fileName='" + fileName + '\'' +
                 ", sampleRate=" + sampleRate +
                 ", channels=" + channels +
