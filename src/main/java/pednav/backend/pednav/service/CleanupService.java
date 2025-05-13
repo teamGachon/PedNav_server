@@ -12,7 +12,7 @@ public class CleanupService {
 
     private final DataRepository repository;
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 300000)
     @Transactional
     public void deleteOldData() {
         long now = System.currentTimeMillis();

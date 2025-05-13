@@ -17,4 +17,5 @@ public class DetectionResult {
     private Double vehicleDetected;
     private Double velocity;
     private Double distance;
+    private String danger;
 }

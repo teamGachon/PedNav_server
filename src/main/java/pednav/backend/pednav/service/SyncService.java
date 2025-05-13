@@ -45,10 +45,12 @@ public class SyncService {
         buffer.put(timestamp, data);
 
         if (data.isComplete()) {
-            repository.save(data.toEntity());
 
             // danger 판단 로직 실행
             String danger = evaluateDanger(data);
+
+            data.setDanger(danger);
+            repository.save(data.toEntity());
 
             // 로그 출력
             System.out.printf("🚨 Danger 평가: %s [timestamp=%d, vehicle_detected=%.2f, distance=%.2f m, velocity=%.2f km/h]%n",
