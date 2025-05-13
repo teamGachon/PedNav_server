@@ -19,7 +19,7 @@ public class SyncService {
 
     private final Map<Long, PartialData> buffer = new ConcurrentHashMap<>();
 
-    public SyncService(DataRepository repository, UnifiedWebSocketHandler webSocketHandler) {
+    public SyncService(DataRepository repository) {
         this.repository = repository;
     }
 
