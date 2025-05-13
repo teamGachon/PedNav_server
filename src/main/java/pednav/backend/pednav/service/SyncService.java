@@ -29,6 +29,9 @@ public class SyncService {
     }
 
     public void processIncomingJson(String json, WebSocketSession session) throws Exception {
+
+        System.out.println("📥 수신된 JSON: " + json);
+
         JSONObject obj = new JSONObject(json);
         long timestamp = obj.getLong("timestamp");
 
