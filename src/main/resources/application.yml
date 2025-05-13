@@ -1,37 +1,40 @@
+server:
+  port: 3000  # Docker에서 매핑할 포트
+
 spring:
   application:
-    name: pednav  # 애플리케이션 이름 설정
+    name: pednav
   datasource:
-    url: jdbc:h2:tcp://localhost/~/test;  # H2 데이터베이스 연결 URL
-    driver-class-name: org.h2.Driver  # H2 데이터베이스 드라이버
-    username: sa  # 데이터베이스 사용자명
-    read-only: false  # 읽기 전용 모드 비활성화
-
-    sql:
-      init:
-        mode: never  # SQL 초기화 비활성화
-
+    url: jdbc:h2:mem:testdb  # Docker 환경에서는 메모리 DB 사용 권장
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
     jpa:
       hibernate:
-        ddl-auto: create  # JPA 엔티티로부터 데이터베이스 스키마 생성
-        properties:
-          hibernate:
-            dialect: org.hibernate.dialect.H2Dialect  # H2용 방언 설정
-            show_sql: true  # SQL 쿼리 출력
-            format_sql: true  # SQL 쿼리를 보기 좋게 출력
-            use_sql_comments: true  # SQL 쿼리에 주석 포함
-            default_batch_fetch_size: 1000  # 배치 페치 크기 설정
+        ddl-auto: create
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.H2Dialect
+          show_sql: true
+          format_sql: true
+          use_sql_comments: true
+          default_batch_fetch_size: 1000
+  sql:
+    init:
+      mode: never
+  h2:
+    console:
+      enabled: false  # H2 콘솔 비활성화 (Docker 환경에서는 보통 필요 없음)
 
-  logging:
-    level:
-      root: debug  # 디버그 레벨로 로그 출력
+logging:
+  level:
+    root: debug
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health, info  # 관리 엔드포인트 설정 (health, info 활성화)
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
 
 jmx:
-  enabled: false  # JMX 비활성화
+  enabled: false

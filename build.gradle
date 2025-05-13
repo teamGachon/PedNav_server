@@ -41,8 +41,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient를 위한 의존성
+    implementation 'org.json:json:20230618' // JSONObject 오류 방지를 위한 의존성 (버전은 최신 사용)
 
-    implementation 'com.github.psambit9791:jlibrosa:1.0.8'
 
 
 
@@ -55,4 +56,9 @@ tasks.named('test') {
 
 jar {
     enabled = false
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
