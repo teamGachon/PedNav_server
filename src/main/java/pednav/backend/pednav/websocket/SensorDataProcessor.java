@@ -17,7 +17,6 @@ public class SensorDataProcessor {
         PartialData data = new PartialData(timestamp);
         data.setVehicleDetected(payload.vehicleDetected.doubleValue());
         data.setVelocity(payload.velocity.doubleValue());
-        data.setFrequency(payload.frequency.doubleValue());
         data.setDistance(payload.distance.doubleValue());
 
         repository.save(data.toEntity());

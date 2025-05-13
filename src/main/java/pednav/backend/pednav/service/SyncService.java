@@ -39,7 +39,6 @@ public class SyncService {
         }
         if (obj.has("velocity")) {
             data.setVelocity(obj.getDouble("velocity"));
-            data.setFrequency(obj.getDouble("frequency"));
             data.setDistance(obj.getDouble("distance"));
         }
 

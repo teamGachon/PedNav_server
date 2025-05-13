@@ -9,7 +9,7 @@ public class SensorDataBuffer {
 
     public static class SensorPayload {
         public Float vehicleDetected;  // from Android
-        public Float velocity, frequency, distance;  // from ESP32
+        public Float velocity, distance;  // from ESP32
     }
 
     private final ConcurrentHashMap<Long, SensorPayload> buffer = new ConcurrentHashMap<>();
@@ -29,11 +29,10 @@ public class SensorDataBuffer {
         });
     }
 
-    public void putESP32Data(long timestamp, float velocity, float frequency, float distance) {
+    public void putESP32Data(long timestamp, float velocity,  float distance) {
         buffer.compute(timestamp, (ts, existing) -> {
             if (existing == null) existing = new SensorPayload();
             existing.velocity = velocity;
-            existing.frequency = frequency;
             existing.distance = distance;
             return existing;
         });
@@ -43,7 +42,7 @@ public class SensorDataBuffer {
     private void flush() {
         buffer.forEach((timestamp, payload) -> {
             if (payload.vehicleDetected != null &&
-                    payload.velocity != null && payload.frequency != null && payload.distance != null) {
+                    payload.velocity != null && payload.distance != null) {
 
                 processor.process(timestamp, payload);
                 buffer.remove(timestamp);
