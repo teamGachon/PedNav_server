@@ -1,13 +1,13 @@
 package pednav.backend.pednav.service;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.socket.WebSocketSession;
 import pednav.backend.pednav.dto.PartialData;
 import pednav.backend.pednav.repository.DataRepository;
 import pednav.backend.pednav.websocket.UnifiedWebSocketHandler;
-import org.json.JSONObject;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,29 +47,35 @@ public class SyncService {
         if (data.isComplete()) {
             repository.save(data.toEntity());
 
-            // FastAPI 요청 (비동기 가능)
-            String result = sendToFastAPI(data);
+            // danger 판단 로직 실행
+            String danger = evaluateDanger(data);
 
-            // 결과를 Android로 전송
-            webSocketHandler.sendToAndroidClients(result);
+            // 로그 출력
+            System.out.printf("🚨 Danger 평가: %s [timestamp=%d, vehicle_detected=%.2f, distance=%.2f m, velocity=%.2f km/h]%n",
+                    danger, data.getTimestamp(), data.getVehicleDetected(), data.getDistance(), data.getVelocity());
+
+            // Android로 전송 (JSON 형태)
+            String resultJson = "{\"danger\":\"" + danger + "\"}";
+            webSocketHandler.sendToAndroidClients(resultJson);
 
             buffer.remove(timestamp);
         }
     }
 
-    private String sendToFastAPI(PartialData data) {
-        try {
-            WebClient client = WebClient.create("http://your-fastapi-url.com");
-            String response = client.post()
-                    .uri("/predict")
-                    .bodyValue(data)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block(); // 또는 async로 변경 가능
-            return response;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{\"danger\":false}";
+    // 🚨 내부 판단 알고리즘
+    private String evaluateDanger(PartialData data) {
+        double vehicleDetected = data.getVehicleDetected();
+        double distance = data.getDistance(); // meters
+        double velocity = data.getVelocity(); // km/h
+
+        if (vehicleDetected >= 0.4) {
+            if (distance < 5 && velocity > 20) return "HIGH";
+            else if (distance < 10 && velocity > 10) return "MEDIUM";
+            else return "LOW";
+        } else {
+            if (distance < 2 && velocity < 10) return "HIGH";
+            else if (distance < 4 && velocity < 15) return "MEDIUM";
+            else return "LOW";
         }
     }
 }

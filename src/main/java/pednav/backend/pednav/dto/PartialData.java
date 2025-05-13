@@ -2,6 +2,7 @@ package pednav.backend.pednav.dto;
 
 import pednav.backend.pednav.domain.entity.DetectionResult;
 
+
 public class PartialData {
     private Long timestamp;
     private Double vehicleDetected;
