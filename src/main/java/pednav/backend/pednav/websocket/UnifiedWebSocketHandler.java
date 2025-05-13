@@ -1,5 +1,6 @@
 package pednav.backend.pednav.websocket;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -16,13 +17,13 @@ public class UnifiedWebSocketHandler extends TextWebSocketHandler {
     private final SyncService syncService;
     private final List<WebSocketSession> androidSessions = new CopyOnWriteArrayList<>();
 
-    public UnifiedWebSocketHandler(SyncService syncService) {
+    public UnifiedWebSocketHandler(@Lazy SyncService syncService) {
         this.syncService = syncService;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        androidSessions.add(session); // Android 클라이언트 저장
+        androidSessions.add(session);
     }
 
     @Override
