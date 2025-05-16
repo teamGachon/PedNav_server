@@ -4,6 +4,7 @@ package pednav.backend.pednav.websocket;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import pednav.backend.pednav.dto.PartialData;
+import pednav.backend.pednav.external.FastApiClient;
 import pednav.backend.pednav.repository.DataRepository;
 import pednav.backend.pednav.service.DangerEvaluator;
 
@@ -11,16 +12,16 @@ import pednav.backend.pednav.service.DangerEvaluator;
 public class SensorDataProcessor {
 
     private final DataRepository repository;
-    private final DangerEvaluator dangerEvaluator;  // ✅ 의존성 분리
     private final UnifiedWebSocketHandler webSocketHandler;
+    private final FastApiClient fastApiClient;
 
     public SensorDataProcessor(
             DataRepository repository,
-            DangerEvaluator dangerEvaluator,  // ✅ 더 이상 SyncService 아님
+            FastApiClient fastApiClient,
             UnifiedWebSocketHandler webSocketHandler
     ) {
         this.repository = repository;
-        this.dangerEvaluator = dangerEvaluator;
+        this.fastApiClient = fastApiClient;
         this.webSocketHandler = webSocketHandler;
     }
 
@@ -30,7 +31,7 @@ public class SensorDataProcessor {
         data.setVelocity(payload.velocity.doubleValue());
         data.setDistance(payload.distance.doubleValue());
 
-        String danger = dangerEvaluator.evaluateDanger(data);  // ✅ 사용 방식 동일
+        String danger = fastApiClient.predictDanger(data);
         data.setDanger(danger);
 
         repository.save(data.toEntity());
