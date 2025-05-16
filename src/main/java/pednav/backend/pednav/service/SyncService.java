@@ -1,86 +1,40 @@
 package pednav.backend.pednav.service;
 
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.WebSocketSession;
-import pednav.backend.pednav.dto.PartialData;
 import pednav.backend.pednav.repository.DataRepository;
-import pednav.backend.pednav.websocket.UnifiedWebSocketHandler;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import pednav.backend.pednav.websocket.SensorDataBuffer;
 
 @Service
+// ✅ Setter 제거 및 생성자에서도 webSocketHandler 제거
 public class SyncService {
 
-    private UnifiedWebSocketHandler webSocketHandler;
     private final DataRepository repository;
+    private final SensorDataBuffer buffer;
 
-    private final Map<Long, PartialData> buffer = new ConcurrentHashMap<>();
-
-    public SyncService(DataRepository repository) {
+    public SyncService(DataRepository repository, @Lazy SensorDataBuffer buffer) {
         this.repository = repository;
+        this.buffer = buffer;
     }
 
-    @Autowired
-    public void setWebSocketHandler(UnifiedWebSocketHandler webSocketHandler) {
-        this.webSocketHandler = webSocketHandler;
-    }
+    public void processIncomingJson(String json) {
+        try {
+            System.out.println("📥 수신된 JSON: " + json);
+            JSONObject obj = new JSONObject(json);
+            long timestamp = obj.getLong("timestamp");
 
-    public void processIncomingJson(String json, WebSocketSession session) throws Exception {
-
-        System.out.println("📥 수신된 JSON: " + json);
-
-        JSONObject obj = new JSONObject(json);
-        long timestamp = obj.getLong("timestamp");
-
-        PartialData data = buffer.getOrDefault(timestamp, new PartialData(timestamp));
-
-        if (obj.has("vehicle_detected")) {
-            data.setVehicleDetected(obj.getDouble("vehicle_detected"));
-        }
-        if (obj.has("velocity")) {
-            data.setVelocity(obj.getDouble("velocity"));
-            data.setDistance(obj.getDouble("distance"));
-        }
-
-        buffer.put(timestamp, data);
-
-        if (data.isComplete()) {
-
-            // danger 판단 로직 실행
-            String danger = evaluateDanger(data);
-
-            data.setDanger(danger);
-            repository.save(data.toEntity());
-
-            // 로그 출력
-            System.out.printf("🚨 Danger 평가: %s [timestamp=%d, vehicle_detected=%.2f, distance=%.2f m, velocity=%.2f km/h]%n",
-                    danger, data.getTimestamp(), data.getVehicleDetected(), data.getDistance(), data.getVelocity());
-
-            // Android로 전송 (JSON 형태)
-            String resultJson = "{\"danger\":\"" + danger + "\"}";
-            webSocketHandler.sendToAndroidClients(resultJson);
-
-            buffer.remove(timestamp);
-        }
-    }
-
-    // 🚨 내부 판단 알고리즘
-    private String evaluateDanger(PartialData data) {
-        double vehicleDetected = data.getVehicleDetected();
-        double distance = data.getDistance(); // meters
-        double velocity = data.getVelocity(); // km/h
-
-        if (vehicleDetected >= 0.4) {
-            if (distance < 5 && velocity > 20) return "HIGH";
-            else if (distance < 10 && velocity > 10) return "MEDIUM";
-            else return "LOW";
-        } else {
-            if (distance < 2 && velocity < 10) return "HIGH";
-            else if (distance < 4 && velocity < 15) return "MEDIUM";
-            else return "LOW";
+            if (obj.has("vehicle_detected")) {
+                float val = (float) obj.getDouble("vehicle_detected");
+                buffer.putAndroidData(timestamp, val);
+            }
+            if (obj.has("velocity") && obj.has("distance")) {
+                float vel = (float) obj.getDouble("velocity");
+                float dist = (float) obj.getDouble("distance");
+                buffer.putESP32Data(timestamp, vel, dist);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

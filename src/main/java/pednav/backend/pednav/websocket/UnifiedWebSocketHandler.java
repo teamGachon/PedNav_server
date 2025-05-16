@@ -1,5 +1,8 @@
 package pednav.backend.pednav.websocket;
 
+import java.util.function.Consumer;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -10,15 +13,19 @@ import pednav.backend.pednav.service.SyncService;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 @Component
 public class UnifiedWebSocketHandler extends TextWebSocketHandler {
 
-    private final SyncService syncService;
+    private Consumer<String> messageHandler;
     private final List<WebSocketSession> androidSessions = new CopyOnWriteArrayList<>();
 
-    public UnifiedWebSocketHandler(@Lazy SyncService syncService) {
-        this.syncService = syncService;
+    public UnifiedWebSocketHandler() {} // ✅ buffer 제거
+
+    @Autowired
+    public void setMessageHandler(@Lazy SyncService syncService) {
+        this.messageHandler = syncService::processIncomingJson;
     }
 
     @Override
@@ -27,9 +34,10 @@ public class UnifiedWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String json = message.getPayload();
-        syncService.processIncomingJson(json, session);
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        if (messageHandler != null) {
+            messageHandler.accept(message.getPayload());
+        }
     }
 
     public void sendToAndroidClients(String resultJson) {

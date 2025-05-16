@@ -12,12 +12,12 @@ public class CleanupService {
 
     private final DataRepository repository;
 
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRate = 60000) // 1분마다 실행
     @Transactional
     public void deleteOldData() {
         long now = System.currentTimeMillis();
-        long threshold = now - (5 * 60 * 1000); // 5분 전 기준
+        long threshold = now - (1 * 60 * 1000); // 1분 전 기준
         repository.deleteOldEntries(threshold);
-        System.out.println("🧹 5분 이상 지난 데이터 삭제 완료");
+        System.out.println("🧹 1분 이상 지난 데이터 삭제 완료");
     }
 }
