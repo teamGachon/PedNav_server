@@ -22,7 +22,7 @@ public class Case3SensorProcessor {
         data.setVelocity(payload.velocity.doubleValue());
         data.setDistance(payload.distance.doubleValue());
 
-        String danger = case3Service.evaluateDanger(data);
+        String danger = case3Service.evaluateAndSaveDanger(data);
 
         String resultJson = "{\"danger\":\"" + danger + "\"}";
         webSocketHandler.sendToAndroidClients(resultJson);

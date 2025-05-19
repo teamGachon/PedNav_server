@@ -1,7 +1,9 @@
 package pednav.backend.pednav.dto;
 
+// Case2DangerRequest.java
 public record Case2DangerRequest(
         Long timestamp,
-        Double radarDetected,   // ESP32 local 연산 결과
-        byte[] audioPcm         // Android에서 보낸 raw PCM 오디오
+        Double radarDetected,
+        String danger,
+        String audioFileUrl // 추후 S3 저장 시 사용 가능
 ) {}

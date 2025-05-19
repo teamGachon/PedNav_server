@@ -13,8 +13,8 @@ public class Case3DangerService {
     private final DataRepository repository;
     private final FastApiClient fastApiClient;
 
-    public String evaluateDanger(Case3DangerRequest data) {
-        String danger = fastApiClient.predictDanger(data);
+    public String evaluateAndSaveDanger(Case3DangerRequest data) {
+        String danger = fastApiClient.predictDangerCase3(data);
         data.setDanger(danger);
         repository.save(data.toEntity());
         return danger;
