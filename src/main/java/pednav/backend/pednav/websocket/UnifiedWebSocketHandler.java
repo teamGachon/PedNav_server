@@ -19,6 +19,7 @@ public class UnifiedWebSocketHandler extends TextWebSocketHandler {
 
     private Consumer<String> messageHandler;
     private final List<WebSocketSession> androidSessions = new CopyOnWriteArrayList<>();
+    private final List<WebSocketSession> esp32Sessions = new CopyOnWriteArrayList<>();
 
     public UnifiedWebSocketHandler() {}
 
@@ -29,20 +30,31 @@ public class UnifiedWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        androidSessions.add(session);
+        System.out.println("✅ WebSocket 연결 수립: " + session.getId());
     }
+
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
-        if (messageHandler != null) {
-            messageHandler.accept(message.getPayload());
+        String payload = message.getPayload();
+        if (payload.contains("deviceType")) {
+            if (payload.contains("ANDROID") && !androidSessions.contains(session)) {
+                androidSessions.add(session);
+            } else if (payload.contains("ESP32") && !esp32Sessions.contains(session)) {
+                esp32Sessions.add(session);
+            }
+        } else if (messageHandler != null) {
+            messageHandler.accept(payload);
         }
     }
 
-    public void sendToAndroidClients(String resultJson) {
-        for (WebSocketSession session : androidSessions) {
+
+    // 각 타입별 메시지 전송
+    public void sendToDevice(String deviceType, String json) {
+        List<WebSocketSession> targetSessions = deviceType.equals("ANDROID") ? androidSessions : esp32Sessions;
+        for (WebSocketSession session : targetSessions) {
             try {
-                session.sendMessage(new TextMessage(resultJson));
+                session.sendMessage(new TextMessage(json));
             } catch (IOException e) {
                 e.printStackTrace();
             }

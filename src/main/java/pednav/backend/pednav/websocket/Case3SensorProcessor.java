@@ -25,6 +25,6 @@ public class Case3SensorProcessor {
         String danger = case3Service.evaluateAndSaveDanger(data);
 
         String resultJson = "{\"danger\":\"" + danger + "\"}";
-        webSocketHandler.sendToAndroidClients(resultJson);
+        webSocketHandler.sendToDevice("ANDROID", resultJson);
     }
 }

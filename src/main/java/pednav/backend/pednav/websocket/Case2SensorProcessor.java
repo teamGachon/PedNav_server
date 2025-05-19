@@ -18,6 +18,6 @@ public class Case2SensorProcessor {
         String danger = case2Service.evaluateAndSaveDanger(timestamp, payload.radarDetected.doubleValue(), payload.audioPcm);
 
         String resultJson = "{\"danger\":\"" + danger + "\"}";
-        webSocketHandler.sendToAndroidClients(resultJson);
+        webSocketHandler.sendToDevice("ANDROID", resultJson); // ✅ 수정
     }
 }
