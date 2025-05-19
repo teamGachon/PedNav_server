@@ -44,7 +44,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient를 위한 의존성
     implementation 'org.json:json:20230618' // JSONObject 오류 방지를 위한 의존성 (버전은 최신 사용)
 
-
+    implementation 'software.amazon.awssdk:s3:2.20.118'
+    implementation 'software.amazon.awssdk:auth:2.20.118'
+    implementation 'software.amazon.awssdk:regions:2.20.118'
 
 
 
