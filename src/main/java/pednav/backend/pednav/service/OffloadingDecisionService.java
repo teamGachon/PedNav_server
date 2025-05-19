@@ -7,7 +7,7 @@ import pednav.backend.pednav.dto.OffloadingDecisionRequest;
 public class OffloadingDecisionService {
 
     public boolean shouldOffload(OffloadingDecisionRequest req) {
-        // 유틸리티 계산 (예시)
+        // 유틸리티 계산
         double U_local = localUtility(req);
         double U_offload = offloadUtility(req);
         return U_offload > U_local;

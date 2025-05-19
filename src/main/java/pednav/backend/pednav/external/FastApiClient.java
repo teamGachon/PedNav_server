@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import pednav.backend.pednav.dto.PartialData;
+import pednav.backend.pednav.dto.Case3DangerRequest;
 
 @Component
 @RequiredArgsConstructor
@@ -14,12 +14,12 @@ public class FastApiClient {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String FAST_API_URL = "http://3.39.233.144:8000/predict"; // 👈 FastAPI 주소
+    private final String FAST_API_URL = "http://3.34.129.82:8003/predict"; // Case3 모델
 
-    public String predictDanger(PartialData data) {
+    public String predictDanger(Case3DangerRequest data) {
         try {
             JsonNode request = objectMapper.createObjectNode()
-                    .put("vehicle_detected", data.getVehicleDetected())
+                    .put("sound_detected", data.toEntity().getSoundDetected())
                     .put("velocity", data.getVelocity())
                     .put("distance", data.getDistance());
 

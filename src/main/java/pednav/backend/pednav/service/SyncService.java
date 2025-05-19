@@ -4,16 +4,16 @@ import org.json.JSONObject;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import pednav.backend.pednav.repository.DataRepository;
-import pednav.backend.pednav.websocket.SensorDataBuffer;
+import pednav.backend.pednav.websocket.Case3SensorBuffer;
 
 @Service
 // ✅ Setter 제거 및 생성자에서도 webSocketHandler 제거
 public class SyncService {
 
     private final DataRepository repository;
-    private final SensorDataBuffer buffer;
+    private final Case3SensorBuffer buffer;
 
-    public SyncService(DataRepository repository, @Lazy SensorDataBuffer buffer) {
+    public SyncService(DataRepository repository, @Lazy Case3SensorBuffer buffer) {
         this.repository = repository;
         this.buffer = buffer;
     }

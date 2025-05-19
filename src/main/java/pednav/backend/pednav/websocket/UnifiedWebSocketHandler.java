@@ -13,7 +13,6 @@ import pednav.backend.pednav.service.SyncService;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 
 @Component
 public class UnifiedWebSocketHandler extends TextWebSocketHandler {
@@ -21,7 +20,7 @@ public class UnifiedWebSocketHandler extends TextWebSocketHandler {
     private Consumer<String> messageHandler;
     private final List<WebSocketSession> androidSessions = new CopyOnWriteArrayList<>();
 
-    public UnifiedWebSocketHandler() {} // ✅ buffer 제거
+    public UnifiedWebSocketHandler() {}
 
     @Autowired
     public void setMessageHandler(@Lazy SyncService syncService) {
