@@ -70,5 +70,30 @@ public class FastApiClient {
         }
     }
 
-    // TODO: Case4도 필요시 구현
+    public String predictDangerCase4(Double velocity, Double distance, byte[] audioPcm) {
+        try {
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("velocity", velocity);
+            body.add("distance", distance);
+            body.add("sound_file", new ByteArrayResource(audioPcm) {
+                @Override
+                public String getFilename() {
+                    return "audio.pcm";
+                }
+            });
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(CASE4_API_URL, request, String.class);
+            JsonNode json = objectMapper.readTree(response.getBody());
+            return json.get("danger").asText();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "UNKNOWN";
+        }
+    }
+
 }

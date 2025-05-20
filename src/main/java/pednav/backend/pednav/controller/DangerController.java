@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pednav.backend.pednav.dto.*;
 import pednav.backend.pednav.service.*;
+import pednav.backend.pednav.websocket.Case4SensorBuffer;
 
 @RestController
 @RequestMapping("/api/danger")
@@ -15,6 +16,8 @@ public class DangerController {
     private final Case1DangerService case1Service;
     private final Case2DangerService case2Service;
     private final Case3DangerService case3Service;
+    private final Case4DangerService case4Service;
+    private final Case4SensorBuffer case4Buffer;
 
     @PostMapping("/case1")
     public ResponseEntity<String> handleCase1(@RequestBody Case1DangerRequest request) {
@@ -43,5 +46,15 @@ public class DangerController {
         return ResponseEntity.ok(danger);
     }
 
-    // Case4는 추후 확장
+    @PostMapping("/case4")
+    public ResponseEntity<Void> handleCase4(@RequestPart("audio_file") MultipartFile audioFile) {
+        try {
+            long timestamp = System.currentTimeMillis();
+            case4Buffer.putAudioData(timestamp, audioFile.getBytes());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

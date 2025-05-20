@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pednav.backend.pednav.repository.DataRepository;
 import pednav.backend.pednav.websocket.Case2SensorBuffer;
 import pednav.backend.pednav.websocket.Case3SensorBuffer;
+import pednav.backend.pednav.websocket.Case4SensorBuffer;
 
 @Service
 public class SyncService {
@@ -13,15 +14,20 @@ public class SyncService {
     private final DataRepository repository;
     private final Case2SensorBuffer case2Buffer;
     private final Case3SensorBuffer case3Buffer;
+    private final Case4SensorBuffer case4Buffer;
+
 
     public SyncService(
             DataRepository repository,
             @Lazy Case2SensorBuffer case2Buffer,
-            @Lazy Case3SensorBuffer case3Buffer
+            @Lazy Case3SensorBuffer case3Buffer,
+            @Lazy Case4SensorBuffer case4Buffer // ✅ 추가
+
     ) {
         this.repository = repository;
         this.case2Buffer = case2Buffer;
         this.case3Buffer = case3Buffer;
+        this.case4Buffer = case4Buffer;
     }
 
     public void processIncomingJson(String json) {
@@ -44,8 +50,14 @@ public class SyncService {
                 case3Buffer.putESP32Data(timestamp, vel, dist);
             }
 
-            // ✅ audio_pcm: Case2 Android 업로드용 (Base64 encoded가 아니라면 수정 필요)
-            // 지금은 JSON에 포함된 PCM audio는 Android에서 직접 REST로 보내기 때문에 생략 가능
+            if (obj.has("velocity") && obj.has("distance")) {
+                float vel = obj.getFloat("velocity");
+                float dist = obj.getFloat("distance");
+
+                case3Buffer.putESP32Data(timestamp, vel, dist);
+                case4Buffer.putVelocityDistance(timestamp, vel, dist); // ✅ Case4용
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
