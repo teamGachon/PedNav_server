@@ -14,6 +14,7 @@ public class OffloadingMetricStore {
     private OffloadingDecisionRequest esp32Metric;
 
     public void save(OffloadingDecisionRequest req) {
+        System.out.println("📝 Metric 저장: " + req.deviceType() + " / CPU: " + req.cpuLoad() + ", Battery: " + req.batteryLevel() + ", Latency: " + req.latency());
         if ("ANDROID".equalsIgnoreCase(req.deviceType())) {
             this.androidMetric = req;
         } else if ("ESP32".equalsIgnoreCase(req.deviceType())) {

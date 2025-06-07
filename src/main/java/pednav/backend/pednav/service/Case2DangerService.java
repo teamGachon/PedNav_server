@@ -33,6 +33,8 @@ public class Case2DangerService {
         entity.setSoundDetected(null);
 
         repository.save(entity);
+        System.out.println("Case2 : ✅ DB 저장 완료 - danger: " + danger);
+
         return danger;
     }
 }

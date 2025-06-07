@@ -17,6 +17,8 @@ public class Case3DangerService {
         String danger = fastApiClient.predictDangerCase3(data);
         data.setDanger(danger);
         repository.save(data.toEntity());
+        System.out.println("Case3 : ✅ DB 저장 완료 - danger: " + danger);
+
         return danger;
     }
 }

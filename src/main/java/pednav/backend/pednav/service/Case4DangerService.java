@@ -27,6 +27,7 @@ public class Case4DangerService {
         entity.setDanger(danger);
 
         repository.save(entity);
+        System.out.println("Case4 : ✅ DB 저장 완료 - danger: " + danger);
         return danger;
     }
 }

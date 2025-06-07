@@ -15,6 +15,8 @@ public class Case3DangerRequest {
     public String getDanger() { return danger; }
 
 
+    public Case3DangerRequest() {}
+
 
     public Case3DangerRequest(Long timestamp) {
         this.timestamp = timestamp;

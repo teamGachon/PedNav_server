@@ -43,19 +43,12 @@ public class SyncService {
                 case3Buffer.putAndroidData(timestamp, val); // Case3에도 사용됨
             }
 
-            // ✅ velocity + distance: Case3
-            if (obj.has("velocity") && obj.has("distance")) {
-                float vel = (float) obj.getDouble("velocity");
-                float dist = (float) obj.getDouble("distance");
-                case3Buffer.putESP32Data(timestamp, vel, dist);
-            }
-
             if (obj.has("velocity") && obj.has("distance")) {
                 float vel = obj.getFloat("velocity");
                 float dist = obj.getFloat("distance");
 
                 case3Buffer.putESP32Data(timestamp, vel, dist);
-                case4Buffer.putVelocityDistance(timestamp, vel, dist); // ✅ Case4용
+                case4Buffer.putVelocityDistance(timestamp, vel, dist);
             }
 
 

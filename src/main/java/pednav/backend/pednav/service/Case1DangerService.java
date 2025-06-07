@@ -21,6 +21,8 @@ public class Case1DangerService {
         else if (score > 0.4) danger = "MEDIUM";
         else danger = "LOW";
 
+        System.out.println("🚨 Case1 Danger 판단됨: " + danger + " (score=" + score + ")");
+
         DetectionResult entity = new DetectionResult();
         entity.setTimestamp(req.timestamp());
         entity.setSoundDetected(req.soundDetected());
@@ -30,6 +32,8 @@ public class Case1DangerService {
         entity.setDanger(danger);
 
         repository.save(entity);
+
+        System.out.println("Case1 : ✅ DB 저장 완료 - danger: " + danger);
 
         return danger;
     }

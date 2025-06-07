@@ -1,30 +1,34 @@
 server:
-  port: 3000  # Docker에서 매핑할 포트
+  port: 3000
 
 spring:
   application:
     name: pednav
+
   datasource:
-    url: jdbc:h2:mem:testdb  # Docker 환경에서는 메모리 DB 사용 권장
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-    jpa:
+    url: jdbc:mysql://pednav-db.czi2e8k28f5u.ap-northeast-2.rds.amazonaws.com:3306/audar
+    username: admin
+    password: 12345678
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
       hibernate:
-        ddl-auto: create
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.H2Dialect
-          show_sql: true
-          format_sql: true
-          use_sql_comments: true
-          default_batch_fetch_size: 1000
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+        default_batch_fetch_size: 1000
+
   sql:
     init:
       mode: never
+
   h2:
     console:
-      enabled: false  # H2 콘솔 비활성화 (Docker 환경에서는 보통 필요 없음)
+      enabled: false
 
 logging:
   level:
@@ -38,3 +42,8 @@ management:
 
 jmx:
   enabled: false
+
+aws:
+  s3:
+    bucket: audar-bucker1
+    region: ap-northeast-2
