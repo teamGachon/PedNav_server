@@ -18,9 +18,9 @@ public class FastApiClient {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String CASE2_API_URL = "http://3.34.129.82:8002/predict";
-    private final String CASE3_API_URL = "http://3.34.129.82:8003/predict";
-    private final String CASE4_API_URL = "http://3.34.129.82:8004/predict"; // 나중에
+    private final String CASE2_API_URL = "http://3.34.185.210:8002/predict";
+    private final String CASE3_API_URL = "http://3.34.185.210:8003/predict";
+    private final String CASE4_API_URL = "http://3.34.185.210:8004/predict"; // 나중에
 
     /**
      * Case3: sound_detected + velocity + distance
